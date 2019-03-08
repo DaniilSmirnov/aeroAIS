@@ -13,7 +13,7 @@ user_id = 0
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(510, 412)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -49,14 +49,14 @@ class Ui_MainWindow(object):
         self.accountbuton.setText(_translate("MainWindow", "Личная карточка"))
 
         global user_id
-        query = "select fio from part_team where worker_id = %s"
+        query = "select fio from part_team where workerid = %s"
         data = (user_id,)
         cursor.execute(query, data)
         for item in cursor:
             for value in item:
                 self.workerlabel.setText("Вы авторизованы как: " + str(value))
 
-    def setupLoginUi(self, MainWindow):
+    def setupLoginUi(self):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(442, 360)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
 
     def login(self):
         try:
-            query = "select pass from worker where worker_id = %s"
+            query = "select password from part_team where workerid = %s"
             data = (self.loginedit.text(),)
             cursor.execute(query, data)
             for item in cursor:
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupLoginUi(MainWindow)
+    ui.setupLoginUi()
     MainWindow.show()
     sys.exit(app.exec_())
 
