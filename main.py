@@ -48,6 +48,9 @@ class Ui_MainWindow(object):
         self.exitbutton.setText(_translate("MainWindow", "Выход"))
         self.accountbuton.setText(_translate("MainWindow", "Личная карточка"))
 
+        self.accountbuton.clicked.connect(self.setupAccUi)
+        self.exitbutton.clicked.connect(self.setupUi)
+
         global user_id
         query = "select fio from part_team where workerid = %s"
         data = (user_id,)
@@ -153,6 +156,82 @@ class Ui_MainWindow(object):
                         self.setupUi()
         except BaseException:
             pymsgbox.alert("Проверьте правильность данных", "Ошибка")
+
+    def setupAccUi(self):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(510, 412)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
+        self.workerlabel = QtWidgets.QLabel(self.centralwidget)
+        self.workerlabel.setObjectName("workerlabel")
+        self.gridLayout.addWidget(self.workerlabel, 0, 0, 1, 1)
+        self.exitbutton = QtWidgets.QPushButton(self.centralwidget)
+        self.exitbutton.setObjectName("exitbutton")
+        self.gridLayout.addWidget(self.exitbutton, 0, 2, 1, 1)
+        self.modifybutton = QtWidgets.QPushButton(self.centralwidget)
+        self.modifybutton.setObjectName("modifybutton")
+        #self.gridLayout.addWidget(self.modifybutton, 0, 1, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 510, 21))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.retranslateAccUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateAccUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.workerlabel.setText(_translate("MainWindow", "Вы авторизованы как:"))
+        self.exitbutton.setText(_translate("MainWindow", "Назад"))
+        self.modifybutton.setText(_translate("MainWindow", "Применить изменения"))
+
+        self.exitbutton.clicked.connect(self.setupUi)
+
+        global user_id
+        query = "select fio from part_team where workerid = %s"
+        data = (user_id,)
+        cursor.execute(query, data)
+        for item in cursor:
+            for value in item:
+                self.workerlabel.setText("Вы авторизованы как: " + str(value))
+
+        query = "select * from part_team where workerid = %s"
+        cursor.execute(query, data)
+
+        i = 1
+        for item in cursor:
+            for value in item:
+                if str(value) == "None":
+                    continue
+                else:
+                    if i == 1:
+                        value = "Ваш Логин: " + str(value)
+                    if i == 2:
+                        value = "Вас зовут: " + str(value)
+                    if i == 3:
+                        value = "Ваш стаж: " + str(value)
+                    if i == 4:
+                        value = "Уровень образования: " + str(value)
+                    if i == 5:
+                        value = "Паспорт: " + str(value)
+                    if i == 6:
+                        value = "Статус: " + str(value)
+                    if i == 7:
+                        value = "Дата начала работы: " + str(value)
+                    if i == 8:
+                        value = "Место работы: " + str(value)
+                    if i == 9:
+                        value = "Для смены данных или пароля обратитесь к администратору"
+                    item_label = QtWidgets.QLabel(value)
+                    self.gridLayout.addWidget(item_label, i, 0, 1, 1)
+                    i += 1
 
 
 if __name__ == "__main__":
