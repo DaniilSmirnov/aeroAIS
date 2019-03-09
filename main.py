@@ -268,6 +268,10 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setObjectName("pushButton")
         self.gridLayout.addWidget(self.pushButton, 0, 1, 1, 1)
+        self.addteambuutton = QtWidgets.QPushButton(self.centralwidget)
+        self.addteambuutton.setObjectName("pushButton")
+        self.gridLayout.addWidget(self.addteambuutton, 0, 4, 1, 1)
+        self.addteambuutton.setText("Добавить Экипаж")
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
@@ -277,7 +281,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-        self.gridLayout.addWidget(self.scrollArea, 1, 0, 1, 4)
+        self.gridLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 510, 21))
@@ -300,6 +304,7 @@ class Ui_MainWindow(object):
 
         self.exitbutton.clicked.connect(self.setupLoginUi)
         self.pushButton.clicked.connect(self.setupAddWorkerUi)
+        self.addteambuutton.clicked.connect(self.setupAddTeamUi)
 
         global user_id
         query = "select fio from part_team where workerid = %s"
@@ -358,10 +363,9 @@ class Ui_MainWindow(object):
             j += 1
         i += 2
         j = 0
-
         for item in cursor:
             for value in item:
-                if j == 0:
+                if j == 0 or j == 2:
                     if j == 0:
                         buf = str(value)
                     label_item = QtWidgets.QLabel(str(value))
@@ -369,14 +373,43 @@ class Ui_MainWindow(object):
                 else:
                     edit_item = QtWidgets.QLineEdit(str(value))
                     self.gridLayout_2.addWidget(edit_item, i, j, 1, 1)
+                    edit_item.textChanged.connect(lambda state, line=[edit_item, edit_item.text(), j]: modify_team(line))
+
                 j += 1
 
             button_item = QtWidgets.QPushButton("Удалить")
             button_item.clicked.connect(lambda state, id=buf: delete_team(id))
+            self.gridLayout_2.addWidget(button_item, i, j + 2, 1, 1)
+            button_item = QtWidgets.QPushButton("Поставить дату осмотра")
+            button_item.clicked.connect(lambda state, id=buf: med_team(id))
             self.gridLayout_2.addWidget(button_item, i, j + 1, 1, 1)
-
             i += 1
             j = 0
+
+        label_item = QtWidgets.QLabel("Компании")
+        self.gridLayout_2.addWidget(label_item, i, j, 1, 1)
+        labels = ["Название", "Страна"]
+        for label in labels:
+            label_item = QtWidgets.QLabel(label)
+            self.gridLayout_2.addWidget(label_item, i + 1, j, 1, 1)
+            j += 1
+        i += 2
+        j = 0
+
+        query = "select * from Company"
+        cursor.execute(query)
+        for item in cursor:
+            for value in item:
+                if j == 0:
+                    buf = str(value)
+                label_item = QtWidgets.QLabel(str(value))
+                self.gridLayout_2.addWidget(label_item, i, j, 1, 1)
+                j += 1
+            button_item = QtWidgets.QPushButton("Удалить")
+            button_item.clicked.connect(lambda state, id=buf: delete_company(id))
+            self.gridLayout_2.addWidget(button_item, i, j + 1, 1, 1)
+            j = 0
+            i += 1
 
         def fire_worker(id):
             try:
@@ -423,6 +456,39 @@ class Ui_MainWindow(object):
                 query = "update part_team set position = %s where position = %s;"
             cursor.execute(query, data)
             cnx.commit()
+            self.setupAdminUi()
+
+        def med_team(id):
+            query = "update team set date_med = NOW() where idteam = %s"
+            data = (id, )
+            cursor.execute(query, data)
+            cnx.commit()
+            self.setupAdminUi()
+
+        def modify_team(item):
+            self.modifybutton.clicked.connect(lambda: save_team(item))
+
+        def save_team(item):
+            index = int(item[2])
+            data = (item[0].text(), item[1])
+            if index == 1:
+                query = "update team set r_num = %s where r_num = %s;"
+            if index == 3:
+                query = "update team set reas = %s where reas = %s;"
+            if index == 4:
+                query = "update team set allowance = %s where allowance = %s;"
+            if index == 5:
+                query = "update team set workerid = %s where workerid = %s;"
+            cursor.execute(query, data)
+            cnx.commit()
+            self.setupAdminUi()
+
+        def delete_company(id):
+            query = "delete Company where cname = %s"
+            data = (id, )
+            cursor.execute(query, data)
+            cnx.commit()
+            self.setupAdminUi()
 
     def setupAddWorkerUi(self):
         MainWindow.setObjectName("MainWindow")
@@ -513,6 +579,67 @@ class Ui_MainWindow(object):
         cursor.execute(query, data)
         cnx.commit()
         pymsgbox.alert("Пользователь добавлен", "Инфо")
+        self.setupAdminUi()
+
+    def setupAddTeamUi(self):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(618, 412)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.setObjectName("pushButton")
+        self.gridLayout.addWidget(self.pushButton, 2, 0, 1, 2)
+        self.lineEdit_5 = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit_5.setObjectName("lineEdit_5")
+        self.gridLayout.addWidget(self.lineEdit_5, 1, 3, 1, 1)
+        self.label_3 = QtWidgets.QLabel(self.centralwidget)
+        self.label_3.setText("")
+        self.label_3.setObjectName("label_3")
+        self.gridLayout.addWidget(self.label_3, 0, 1, 1, 1)
+        self.label_5 = QtWidgets.QLabel(self.centralwidget)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout.addWidget(self.label_5, 0, 3, 1, 1)
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit.setObjectName("lineEdit")
+        self.gridLayout.addWidget(self.lineEdit, 1, 0, 1, 1)
+        self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.gridLayout.addWidget(self.pushButton_2, 2, 3, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 618, 20))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.retranslateAddTeamUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateAddTeamUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.pushButton.setText(_translate("MainWindow", "Подтвердить"))
+        self.label_4.setText(_translate("MainWindow", "Допуск"))
+        self.label_5.setText(_translate("MainWindow", "ID работника"))
+        self.label.setText(_translate("MainWindow", "Рейс"))
+        self.pushButton_2.setText(_translate("MainWindow", "Отменить"))
+
+        self.pushButton.clicked.connect(self.add_team)
+        self.pushButton_2.clicked.connect(self.setupAdminUi)
+
+    def add_team(self):
+        query = "insert into team values (default, %s, NULL, NULL, 'Нет', %s)"
+        data = (self.lineEdit.text(), self.lineEdit_5.text())
+        cursor.execute(query, data)
+        cnx.commit()
+        pymsgbox.alert("Экипаж добавлен", "Инфо")
         self.setupAdminUi()
 
 
